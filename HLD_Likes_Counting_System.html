@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HLD — Likes Counting System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.7; color: #1a1a1a; background: #f8f7f4; }
+  .page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Cover */
+  .cover { background: #1a1a2e; color: #fff; border-radius: 16px; padding: 48px 40px; margin-bottom: 40px; }
+  .cover-badge { display: inline-block; background: #534AB7; color: #CECBF6; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 20px; }
+  .cover h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+  .cover p { color: #9ca3af; font-size: 14px; }
+  .cover-meta { display: flex; gap: 24px; margin-top: 28px; flex-wrap: wrap; }
+  .cover-stat { }
+  .cover-stat .label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; }
+  .cover-stat .value { font-size: 18px; font-weight: 600; color: #e2e8f0; margin-top: 2px; }
+
+  /* TOC */
+  .toc { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px 32px; margin-bottom: 40px; }
+  .toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; margin-bottom: 16px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 32px; }
+  .toc-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #374151; text-decoration: none; padding: 4px 0; }
+  .toc-num { font-size: 12px; color: #9ca3af; font-weight: 600; min-width: 20px; }
+
+  /* Sections */
+  .section { margin-bottom: 48px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; }
+  .section-num { background: #1a1a2e; color: #fff; font-size: 12px; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .section-header h2 { font-size: 22px; font-weight: 700; color: #111827; }
+
+  /* Subsections */
+  h3 { font-size: 16px; font-weight: 600; color: #111827; margin: 28px 0 12px; }
+  h4 { font-size: 14px; font-weight: 600; color: #374151; margin: 20px 0 8px; }
+  p { color: #374151; margin-bottom: 12px; }
+
+  /* Cards */
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .card-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+  /* Requirement rows */
+  .req-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px; }
+  .req-table th { background: #f3f4f6; text-align: left; padding: 10px 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; }
+  .req-table td { padding: 10px 14px; border-top: 1px solid #f3f4f6; vertical-align: top; color: #374151; }
+  .req-table tr:hover td { background: #fafafa; }
+  .req-table th:first-child, .req-table td:first-child { border-radius: 0; }
+
+  /* Badges */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .badge-purple { background: #EEEDFE; color: #534AB7; }
+  .badge-green { background: #EAF3DE; color: #3B6D11; }
+  .badge-amber { background: #FAEEDA; color: #854F0B; }
+  .badge-red { background: #FCEBEB; color: #A32D2D; }
+  .badge-blue { background: #E6F1FB; color: #185FA5; }
+  .badge-teal { background: #E1F5EE; color: #0F6E56; }
+
+  /* Code blocks */
+  pre { background: #1e1e2e; color: #cdd6f4; border-radius: 10px; padding: 18px 20px; font-size: 13px; line-height: 1.6; overflow-x: auto; margin-bottom: 16px; font-family: 'SF Mono', 'Fira Code', monospace; }
+  code { background: #f3f4f6; color: #be123c; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-card .stat-val { font-size: 22px; font-weight: 700; color: #111827; }
+  .stat-card .stat-lbl { font-size: 11px; color: #9ca3af; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Flow diagram (text) */
+  .flow { background: #1e1e2e; border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; color: #cdd6f4; line-height: 2; }
+
+  /* CAP table */
+  .cap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .cap-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; }
+  .cap-card .component { font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; }
+  .cap-card .reason { font-size: 13px; color: #6b7280; line-height: 1.5; }
+
+  /* Concept cards */
+  .concept-card { background: #fff; border-left: 4px solid #534AB7; border-radius: 0 10px 10px 0; border-top: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 18px 20px; margin-bottom: 14px; }
+  .concept-card .concept-title { font-weight: 600; font-size: 15px; color: #111827; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .concept-card .concept-body { font-size: 14px; color: #374151; line-height: 1.6; }
+  .concept-card .concept-body p { margin-bottom: 6px; }
+  .concept-card .concept-body code { font-size: 12px; }
+
+  /* Tradeoff table */
+  .trade-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  .trade-table th { background: #1a1a2e; color: #e2e8f0; text-align: left; padding: 10px 14px; font-weight: 600; }
+  .trade-table td { padding: 10px 14px; border-top: 1px solid #f3f4f6; vertical-align: top; }
+  .trade-table tr:hover td { background: #fafafa; }
+  .trade-table td:first-child { font-weight: 600; color: #111827; }
+  .trade-table td:nth-child(2) { color: #059669; }
+  .trade-table td:nth-child(3) { color: #dc2626; }
+  .trade-table td:last-child { color: #6b7280; font-size: 12px; }
+
+  /* Pitch box */
+  .pitch-box { background: #1a1a2e; color: #e2e8f0; border-radius: 12px; padding: 28px 32px; font-size: 15px; line-height: 1.8; font-style: italic; margin-bottom: 16px; }
+  .pitch-box strong { color: #a78bfa; font-style: normal; }
+
+  /* Pattern table */
+  .pattern-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .pattern-table th { background: #f3f4f6; padding: 10px 14px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
+  .pattern-table td { padding: 10px 14px; border-top: 1px solid #f3f4f6; }
+  .pattern-table td:first-child { font-weight: 600; color: #534AB7; }
+
+  /* Checklist */
+  .checklist { list-style: none; }
+  .checklist li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-top: 1px solid #f3f4f6; font-size: 14px; color: #374151; }
+  .checklist li:first-child { border-top: none; }
+  .check-box { width: 18px; height: 18px; border: 2px solid #d1d5db; border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+
+  /* Highlight callout */
+  .callout { border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; font-size: 14px; }
+  .callout-blue { background: #E6F1FB; border-left: 4px solid #378ADD; color: #0C447C; }
+  .callout-amber { background: #FAEEDA; border-left: 4px solid #EF9F27; color: #633806; }
+  .callout-green { background: #EAF3DE; border-left: 4px solid #639922; color: #27500A; }
+  .callout strong { font-weight: 600; }
+
+  /* API block */
+  .api-block { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .api-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid #f3f4f6; }
+  .method { font-family: monospace; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+  .method-post { background: #E6F1FB; color: #185FA5; }
+  .method-get  { background: #EAF3DE; color: #3B6D11; }
+  .method-del  { background: #FCEBEB; color: #A32D2D; }
+  .api-path { font-family: monospace; font-size: 13px; color: #111827; font-weight: 500; }
+  .api-body { padding: 16px 18px; }
+
+  /* Consistency grid */
+  .cons-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .cons-table th { background: #f3f4f6; padding: 10px 14px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
+  .cons-table td { padding: 10px 14px; border-top: 1px solid #f3f4f6; }
+  .cons-table td:first-child { font-weight: 600; color: #111827; }
+  .strong-tag { background: #EAF3DE; color: #3B6D11; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .eventual-tag { background: #FAEEDA; color: #854F0B; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+
+  @media (max-width: 640px) {
+    .card-grid, .card-grid-3, .stat-grid, .cap-grid { grid-template-columns: 1fr; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .cover h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-badge">Wave 1 · Problem 1</div>
+    <h1>Likes Counting System</h1>
+    <p>High Level Design — Full Revision Guide</p>
+    <div class="cover-meta">
+      <div class="cover-stat"><div class="label">Scale</div><div class="value">1B likes/day</div></div>
+      <div class="cover-stat"><div class="label">Peak reads</div><div class="value">300K QPS</div></div>
+      <div class="cover-stat"><div class="label">Storage / year</div><div class="value">~10 TB</div></div>
+      <div class="cover-stat"><div class="label">Consistency</div><div class="value">Eventual</div></div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Contents</h2>
+    <div class="toc-grid">
+      <a class="toc-item" href="#req"><span class="toc-num">01</span> Requirements</a>
+      <a class="toc-item" href="#est"><span class="toc-num">02</span> Estimations</a>
+      <a class="toc-item" href="#hld"><span class="toc-num">03</span> High Level Design</a>
+      <a class="toc-item" href="#api"><span class="toc-num">04</span> API Design</a>
+      <a class="toc-item" href="#db"><span class="toc-num">05</span> Database Design</a>
+      <a class="toc-item" href="#deep"><span class="toc-num">06</span> Deep Dives</a>
+      <a class="toc-item" href="#cap"><span class="toc-num">07</span> CAP Classifications</a>
+      <a class="toc-item" href="#concepts"><span class="toc-num">08</span> Concept Cards</a>
+      <a class="toc-item" href="#tradeoffs"><span class="toc-num">09</span> Trade-off Summary</a>
+      <a class="toc-item" href="#pitch"><span class="toc-num">10</span> Interview Pitch</a>
+      <a class="toc-item" href="#patterns"><span class="toc-num">11</span> Pattern Transfers</a>
+      <a class="toc-item" href="#weak"><span class="toc-num">12</span> Weak Areas</a>
+    </div>
+  </div>
+
+  <!-- 1. REQUIREMENTS -->
+  <div class="section" id="req">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Requirements</h2>
+    </div>
+
+    <h3>Functional requirements</h3>
+    <table class="req-table">
+      <thead><tr><th>#</th><th>Requirement</th></tr></thead>
+      <tbody>
+        <tr><td>F1</td><td>User can like a piece of content (post / video / comment)</td></tr>
+        <tr><td>F2</td><td>User can unlike content they previously liked</td></tr>
+        <tr><td>F3</td><td>Display total like count for any content item</td></tr>
+        <tr><td>F4</td><td>Show whether the current user has liked the content</td></tr>
+        <tr><td>F5</td><td>Deduplication — one like per user per content item only</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Non-functional requirements</h3>
+    <table class="req-table">
+      <thead><tr><th>Requirement</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Scale</td><td>1B likes/day · 10:1 read-to-write ratio</td></tr>
+        <tr><td>Write latency</td><td>&lt; 100 ms</td></tr>
+        <tr><td>Read latency</td><td>&lt; 50 ms</td></tr>
+        <tr><td>Like count consistency</td><td>Eventual — few seconds lag is acceptable</td></tr>
+        <tr><td>User's own like status</td><td>Strongly consistent — must be immediate</td></tr>
+        <tr><td>Availability</td><td>99.99%</td></tr>
+        <tr><td>Hot spot handling</td><td>Viral content must not degrade system performance</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-blue">
+      <strong>Key clarifying questions to ask the interviewer</strong> — "What scale are we targeting?" · "Exact or approximate count?" · "How fast should count update?" · "Handle viral content?" · "Can users unlike?"
+    </div>
+  </div>
+
+  <!-- 2. ESTIMATIONS -->
+  <div class="section" id="est">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Estimations</h2>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val">10K</div><div class="stat-lbl">Avg write QPS</div></div>
+      <div class="stat-card"><div class="stat-val">30K</div><div class="stat-lbl">Peak write QPS</div></div>
+      <div class="stat-card"><div class="stat-val">100K</div><div class="stat-lbl">Avg read QPS</div></div>
+      <div class="stat-card"><div class="stat-val">300K</div><div class="stat-lbl">Peak read QPS</div></div>
+    </div>
+
+    <h3>Traffic math</h3>
+    <pre>Write QPS = 1,000,000,000 / 86,400 ≈ 10,000 QPS (avg)
+Peak     = 10,000 × 3   ≈ 30,000 QPS
+
+Read QPS = 10,000 × 10  = 100,000 QPS (avg)
+Peak     = 30,000 × 10  = 300,000 QPS</pre>
+
+    <h3>Storage math</h3>
+    <pre>Per like record = 32 bytes
+  content_id : 8 bytes
+  user_id    : 8 bytes
+  timestamp  : 8 bytes
+  metadata   : 8 bytes
+
+1 year = 10^9 × 365 × 32 ≈ 10 TB
+
+Interview trick: 365 ≈ 400, 32 ≈ 30 → 400 × 30 = 12,000 ≈ 10^4
+∴ 10^9 × 10^4 = 10^13 bytes = ~10 TB ✅</pre>
+
+    <h3>Hot spot calculation</h3>
+    <pre>Viral post: 1M likes in 10 minutes
+Write rate = 1,000,000 / 600 ≈ 1,666 writes/sec on SAME content_id 🔥</pre>
+
+    <div class="callout callout-amber">
+      <strong>Why this matters:</strong> 1,666 writes/sec on a single DB row → lock contention → timeouts → dropped writes. Normal QPS numbers hide this. Always do the hot spot calculation separately.
+    </div>
+  </div>
+
+  <!-- 3. HLD -->
+  <div class="section" id="hld">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>High Level Design</h2>
+    </div>
+
+    <h3>Architecture diagram</h3>
+    <div style="background:#f8f7f4;border:1px solid #e5e7eb;border-radius:12px;padding:24px 16px;margin-bottom:20px;overflow-x:auto;">
+    <svg width="100%" viewBox="0 0 680 580" role="img" xmlns="http://www.w3.org/2000/svg">
+      <title>Likes Counting System Architecture</title>
+      <desc>Full HLD diagram showing write path through DynamoDB and Kafka, read path through Redis cache, and Count Aggregation Service.</desc>
+      <defs>
+        <marker id="harr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <!-- Client -->
+      <rect x="280" y="30" width="120" height="44" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+      <text x="340" y="52" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#2C2C2A">Client</text>
+      <!-- API Gateway -->
+      <rect x="255" y="120" width="170" height="56" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+      <text x="340" y="139" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#2C2C2A">API Gateway</text>
+      <text x="340" y="159" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#5F5E5A">auth · rate limiting</text>
+      <!-- Like Service -->
+      <rect x="255" y="220" width="170" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+      <text x="340" y="239" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#26215C">Like Service</text>
+      <text x="340" y="259" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#534AB7">stateless · dedup</text>
+      <!-- DynamoDB Likes -->
+      <rect x="28" y="348" width="164" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+      <text x="110" y="367" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#04342C">DynamoDB</text>
+      <text x="110" y="387" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#0F6E56">likes table (CP)</text>
+      <!-- Kafka -->
+      <rect x="275" y="350" width="130" height="44" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+      <text x="340" y="372" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#412402">Kafka (AP)</text>
+      <!-- Redis -->
+      <rect x="490" y="348" width="162" height="56" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+      <text x="571" y="367" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">Redis Cluster</text>
+      <text x="571" y="387" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#993C1D">count cache (AP)</text>
+      <!-- Count Aggregation -->
+      <rect x="165" y="470" width="200" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+      <text x="265" y="489" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#26215C">Aggregation Service</text>
+      <text x="265" y="509" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#534AB7">consumes Kafka events</text>
+      <!-- DynamoDB Counts -->
+      <rect x="448" y="470" width="172" height="56" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="534" y="489" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#042C53">DynamoDB</text>
+      <text x="534" y="509" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#185FA5">counts table (AP)</text>
+      <!-- Arrow 1: Client → API Gateway -->
+      <line x1="340" y1="74" x2="340" y2="120" stroke="#888780" stroke-width="1.2" marker-end="url(#harr)"/>
+      <!-- Arrow 2: API Gateway → Like Service -->
+      <line x1="340" y1="176" x2="340" y2="220" stroke="#888780" stroke-width="1.2" marker-end="url(#harr)"/>
+      <!-- Arrow 3: Like Service → DynamoDB Likes (sync write, green L) -->
+      <path d="M 255,248 L 110,248 L 110,348" fill="none" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#harr)"/>
+      <text x="175" y="238" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#0F6E56">sync write</text>
+      <!-- Arrow 4: Like Service → Kafka (async, amber) -->
+      <line x1="340" y1="276" x2="340" y2="350" stroke="#854F0B" stroke-width="1.5" marker-end="url(#harr)"/>
+      <text x="356" y="316" font-family="sans-serif" font-size="11" fill="#854F0B">async</text>
+      <!-- Arrow 5: Like Service → Redis (dashed blue L) -->
+      <path d="M 425,248 L 571,248 L 571,348" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#harr)"/>
+      <text x="505" y="238" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#185FA5">user status</text>
+      <!-- Arrow 6: Kafka → Count Aggregation (amber L) -->
+      <path d="M 340,394 L 340,428 L 265,428 L 265,470" fill="none" stroke="#854F0B" stroke-width="1.5" marker-end="url(#harr)"/>
+      <text x="356" y="418" font-family="sans-serif" font-size="11" fill="#854F0B">events</text>
+      <!-- Arrow 7: Count Aggregation → Redis (green, L up) -->
+      <path d="M 265,470 L 265,408 L 571,408 L 571,404" fill="none" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#harr)"/>
+      <text x="420" y="398" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#0F6E56">INCR / DECR</text>
+      <!-- Arrow 8: Count Aggregation → DynamoDB Counts (teal) -->
+      <line x1="365" y1="498" x2="448" y2="498" stroke="#085041" stroke-width="1.5" marker-end="url(#harr)"/>
+      <text x="404" y="490" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#085041">periodic sync</text>
+      <!-- Arrow 9: Redis → DynamoDB Counts (dashed blue) -->
+      <path d="M 571,404 L 571,448 L 534,448 L 534,470" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#harr)"/>
+      <text x="592" y="440" font-family="sans-serif" font-size="11" fill="#185FA5">miss</text>
+      <!-- Legend -->
+      <line x1="50" y1="555" x2="78" y2="555" stroke="#0F6E56" stroke-width="2"/>
+      <text x="84" y="559" font-family="sans-serif" font-size="11" fill="#0F6E56">write path</text>
+      <line x1="168" y1="555" x2="196" y2="555" stroke="#854F0B" stroke-width="2"/>
+      <text x="202" y="559" font-family="sans-serif" font-size="11" fill="#854F0B">async / events</text>
+      <line x1="316" y1="555" x2="344" y2="555" stroke="#185FA5" stroke-width="2" stroke-dasharray="4,3"/>
+      <text x="350" y="559" font-family="sans-serif" font-size="11" fill="#185FA5">read / cache miss</text>
+      <line x1="490" y1="555" x2="518" y2="555" stroke="#888780" stroke-width="2"/>
+      <text x="524" y="559" font-family="sans-serif" font-size="11" fill="#5F5E5A">request flow</text>
+    </svg>
+    </div>
+
+    <h3>Write path</h3>
+    <div class="flow">Client → API Gateway → Like Service → DynamoDB Likes  (sync, immediate)
+                                         ↓
+                                       Kafka  (async, fire and forget)
+                                         ↓
+                              Count Aggregation Service
+                                         ↓
+                                    Redis  INCR count:post_xyz</div>
+
+    <h3>Read path</h3>
+    <div class="flow">Client → API Gateway → Like Service → Redis  (hit → return count)
+                                                     ↓ miss
+                                               DynamoDB Counts
+                                                     ↓
+                                          populate Redis → return</div>
+
+    <h3>Component responsibilities</h3>
+    <table class="req-table">
+      <thead><tr><th>Component</th><th>Responsibility</th><th>Scaling</th></tr></thead>
+      <tbody>
+        <tr><td><code>API Gateway</code></td><td>Auth, rate limiting, routing</td><td>Horizontal</td></tr>
+        <tr><td><code>Like Service</code></td><td>Business logic, deduplication</td><td>Horizontal (stateless)</td></tr>
+        <tr><td><code>DynamoDB Likes</code></td><td>Source of truth for like records</td><td>Add nodes</td></tr>
+        <tr><td><code>Kafka</code></td><td>Decouples writes from count updates, buffers bursts</td><td>Add partitions</td></tr>
+        <tr><td><code>Count Aggregation</code></td><td>Consume events, INCR/DECR Redis counts</td><td>Horizontal (partition by content_id)</td></tr>
+        <tr><td><code>Redis</code></td><td>Like counts + user like status cache</td><td>Redis Cluster</td></tr>
+        <tr><td><code>DynamoDB Counts</code></td><td>Durable count backup, periodic sync from Redis</td><td>Add nodes</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 4. API -->
+  <div class="section" id="api">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>API Design</h2>
+    </div>
+
+    <div class="api-block">
+      <div class="api-header">
+        <span class="method method-post">POST</span>
+        <span class="api-path">/v1/likes</span>
+        <span class="badge badge-purple" style="margin-left:auto">Like content</span>
+      </div>
+      <div class="api-body">
+        <pre style="margin:0">Request:  { "content_id": "post_abc", "content_type": "post", "user_id": "user_xyz" }
+Response: { "success": true, "like_count": 1247, "liked_by_user": true }
+Errors:   409 Already liked · 404 Not found · 429 Rate limited</pre>
+      </div>
+    </div>
+
+    <div class="api-block">
+      <div class="api-header">
+        <span class="method method-del">DELETE</span>
+        <span class="api-path">/v1/likes</span>
+        <span class="badge badge-red" style="margin-left:auto">Unlike content</span>
+      </div>
+      <div class="api-body">
+        <pre style="margin:0">Request:  { "content_id": "post_abc", "user_id": "user_xyz" }
+Response: { "success": true, "like_count": 1246, "liked_by_user": false }
+Errors:   404 Never liked · 400 Bad request</pre>
+      </div>
+    </div>
+
+    <div class="api-block">
+      <div class="api-header">
+        <span class="method method-get">GET</span>
+        <span class="api-path">/v1/likes/{content_id}?user_id=xyz</span>
+        <span class="badge badge-green" style="margin-left:auto">Get count</span>
+      </div>
+      <div class="api-body">
+        <pre style="margin:0">Response: { "content_id": "post_abc", "like_count": 1247, "liked_by_user": true }</pre>
+      </div>
+    </div>
+
+    <div class="api-block">
+      <div class="api-header">
+        <span class="method method-post">POST</span>
+        <span class="api-path">/v1/likes/count/batch</span>
+        <span class="badge badge-blue" style="margin-left:auto">Batch counts</span>
+      </div>
+      <div class="api-body">
+        <pre style="margin:0">Request:  { "content_ids": ["post_1", "post_2", ...], "user_id": "xyz" }
+Response: { "results": [{ "content_id": "post_1", "like_count": 1247, "liked_by_user": true }, ...] }</pre>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <div class="callout callout-blue" style="margin:0">
+        <strong>Why content_type?</strong> content_id=101 could be a post, video, or comment. content_type routes validation to the correct microservice.
+      </div>
+      <div class="callout callout-green" style="margin:0">
+        <strong>Why return count in write response?</strong> Avoids a second round trip — client updates UI immediately from the write response.
+      </div>
+    </div>
+    <div class="callout callout-amber">
+      <strong>Why POST for batch reads?</strong> GET requests cannot carry a body. POST is acceptable when an array of IDs must be sent. This is a common interview gotcha.
+    </div>
+  </div>
+
+  <!-- 5. DB -->
+  <div class="section" id="db">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Database Design</h2>
+    </div>
+
+    <h3>Database choice</h3>
+    <table class="req-table">
+      <thead><tr><th>Requirement</th><th>SQL (PostgreSQL)</th><th>NoSQL (DynamoDB)</th></tr></thead>
+      <tbody>
+        <tr><td>Write throughput</td><td>❌ Vertical only</td><td>✅ Horizontal scaling</td></tr>
+        <tr><td>Hot spot handling</td><td>❌ Row locking bottleneck</td><td>✅ Distributed partitions</td></tr>
+        <tr><td>Our query pattern</td><td>⚠️ Overkill (no JOINs needed)</td><td>✅ Perfect fit</td></tr>
+        <tr><td>Transactions</td><td>✅ Strong</td><td>❌ Limited (don't need them)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout-green"><strong>Decision: DynamoDB</strong> — on AWS for zero ops overhead. Cassandra if cloud-agnostic is required.</div>
+
+    <h3>Likes table (DynamoDB)</h3>
+    <table class="req-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>content_id</code></td><td>String</td><td>Partition Key — groups all likes for same post on one node</td></tr>
+        <tr><td><code>user_id</code></td><td>String</td><td>Sort Key — combined with content_id enforces uniqueness</td></tr>
+        <tr><td><code>content_type</code></td><td>String</td><td>post / video / comment — routing hint for validation</td></tr>
+        <tr><td><code>created_at</code></td><td>Timestamp</td><td>When the like was created</td></tr>
+      </tbody>
+    </table>
+    <p><strong>GSI on (user_id, content_id)</strong> — supports "all posts liked by user X" for profile pages without scatter-gather.</p>
+
+    <h3>Like counts table (DynamoDB)</h3>
+    <table class="req-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>content_id</code></td><td>String</td><td>Primary Key</td></tr>
+        <tr><td><code>like_count</code></td><td>Integer</td><td>Pre-aggregated count — updated periodically from Redis</td></tr>
+        <tr><td><code>last_updated</code></td><td>Timestamp</td><td>For cache invalidation</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Sharded counts table (Redis)</h3>
+    <pre>Keys: count:post_xyz:0  count:post_xyz:1  ...  count:post_xyz:99
+
+Write: shard_id = hash(user_id) % 100
+       INCR count:post_xyz:{shard_id}
+
+Read:  MGET count:post_xyz:0 ... count:post_xyz:99
+       Total = Shard[0] + Shard[1] + ... + Shard[99]  (sum cached in Redis)</pre>
+  </div>
+
+  <!-- 6. DEEP DIVES -->
+  <div class="section" id="deep">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>Deep Dives</h2>
+    </div>
+
+    <h3>6.1 — Counting approaches</h3>
+    <table class="req-table">
+      <thead><tr><th>Approach</th><th>Read speed</th><th>Write contention</th><th>Accuracy</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Real-time COUNT(*)</td><td>Slow at scale</td><td>None</td><td>Perfect</td><td><span class="badge badge-red">Fails at scale</span></td></tr>
+        <tr><td>Pre-aggregated counter</td><td>O(1)</td><td>High for viral</td><td>Perfect</td><td><span class="badge badge-amber">OK up to ~100/s</span></td></tr>
+        <tr><td>Async via Kafka</td><td>O(1)</td><td>None</td><td>Eventually consistent</td><td><span class="badge badge-green">Recommended</span></td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout-green"><strong>Recommendation:</strong> Async aggregation. Kafka buffers bursts. Redis serves reads in O(1). 1-5s lag is invisible to users — they see "1.2K" anyway.</div>
+
+    <h3>6.2 — Hot spot handling</h3>
+    <div class="callout callout-amber"><strong>The problem:</strong> 10,000 writes/sec on one post → all fight for same DB row lock → contention → timeouts → dropped writes. Even Redis single key at 10K INCR/sec is a bottleneck (single-threaded command execution).</div>
+
+    <h4>Solution: Sharded counters</h4>
+    <pre>shard_id = hash(user_id) % 100    ← deterministic, not random
+
+Write: INCR count:post_xyz:42         ← 100 writes/sec per shard (not 10,000)
+Read:  MGET count:post_xyz:0..99 → sum all shards → cache result</pre>
+
+    <h4>Adaptive counting</h4>
+    <pre>rate detection (sliding window):
+  INCR  rate:post_xyz:{current_minute}
+  EXPIRE rate:post_xyz:{current_minute} 120
+
+  if rate > 100/min → switch to sharded counters
+  if rate < 100/min → consolidate back to single counter
+
+transition (no data loss):
+  existing count = 1,000
+  seed each of 100 shards = 1,000 / 100 = 10 each
+  SUM = 1,000 ✅</pre>
+
+    <h3>6.3 — Deduplication</h3>
+    <h4>Layer 1 — DynamoDB primary key (safety net)</h4>
+    <pre>try {
+    INSERT INTO likes (content_id, user_id, created_at)
+    return SUCCESS
+} catch (DuplicateKeyException e) {
+    return ALREADY_LIKED    // idempotent — not an error
+}</pre>
+
+    <h4>Layer 2 — Redis cache (fast path)</h4>
+    <pre>EXISTS user_like:post_xyz:user_abc
+  → found    → return 409 (never hits DynamoDB)
+  → not found → write DynamoDB → SET Redis key, TTL 1hr</pre>
+
+    <div class="callout callout-blue"><strong>Race condition:</strong> Two concurrent requests both miss Redis cache → both attempt DynamoDB insert → one throws DuplicateKeyException. Caught gracefully. DB is the safety net.</div>
+
+    <h3>6.4 — Read path optimization</h3>
+    <table class="req-table">
+      <thead><tr><th>Layer</th><th>Location</th><th>Latency</th><th>TTL</th><th>Hit rate</th></tr></thead>
+      <tbody>
+        <tr><td>Local in-memory</td><td>App server RAM</td><td>&lt;1ms</td><td>5 seconds</td><td>70–80%</td></tr>
+        <tr><td>Redis</td><td>Distributed cache</td><td>~1ms</td><td>10 minutes</td><td>15–20%</td></tr>
+        <tr><td>DynamoDB Counts</td><td>Database</td><td>~20ms</td><td>—</td><td>5–10%</td></tr>
+      </tbody>
+    </table>
+    <pre>Batch read flow:
+  20 content_ids arrive
+  → MGET all 20 from Redis          ← single round trip
+  → 18 hits: return immediately
+  → 2 misses: BatchGetItem DynamoDB
+  → populate Redis for misses
+  → return all 20 in one response</pre>
+    <div class="callout callout-green"><strong>Optimistic UI:</strong> Client fills heart and increments count immediately before server responds. Reconciles on response. User sees instant feedback — no waiting for server round trip.</div>
+
+    <h3>6.5 — Consistency model</h3>
+    <table class="cons-table">
+      <thead><tr><th>Data</th><th>Model</th><th>Mechanism</th><th>Staleness</th></tr></thead>
+      <tbody>
+        <tr><td>Like counts</td><td><span class="eventual-tag">Eventual</span></td><td>Async Kafka aggregation</td><td>Up to 5–10 min</td></tr>
+        <tr><td>User's own like status</td><td><span class="strong-tag">Strong</span></td><td>Write-through Redis cache</td><td>Immediate</td></tr>
+        <tr><td>Deduplication</td><td><span class="strong-tag">Strong</span></td><td>DynamoDB PK constraint</td><td>Never wrong</td></tr>
+        <tr><td>Monotonic reads</td><td><span class="eventual-tag">Best effort</span></td><td>Sticky sessions rejected — too complex</td><td>Occasional backward jump OK</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 7. CAP -->
+  <div class="section" id="cap">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>CAP Classifications</h2>
+    </div>
+    <div class="cap-grid">
+      <div class="cap-card">
+        <div class="component">DynamoDB Likes <span class="badge badge-purple" style="margin-left:8px">CP</span></div>
+        <div class="reason">Deduplication must be correct. If it returns stale data, a user can like the same post twice.</div>
+      </div>
+      <div class="cap-card">
+        <div class="component">Kafka <span class="badge badge-green" style="margin-left:8px">AP</span></div>
+        <div class="reason">Must keep accepting like events during partition. Refusing events would fail user operations — availability wins.</div>
+      </div>
+      <div class="cap-card">
+        <div class="component">Redis <span class="badge badge-green" style="margin-left:8px">AP</span></div>
+        <div class="reason">Stale like count is acceptable. Showing 1,247 instead of 1,248 for a few seconds is not a serious problem.</div>
+      </div>
+      <div class="cap-card">
+        <div class="component">Like Service <span class="badge badge-green" style="margin-left:8px">AP</span></div>
+        <div class="reason">Stateless service — availability is the priority. All state lives in DB and cache.</div>
+      </div>
+      <div class="cap-card">
+        <div class="component">DynamoDB Counts <span class="badge badge-green" style="margin-left:8px">AP</span></div>
+        <div class="reason">Recovery mechanism — eventual sync from Redis is fine. Not on the primary read path.</div>
+      </div>
+    </div>
+    <div class="callout callout-blue"><strong>Rule of thumb:</strong> Any component doing <strong>deduplication or financial transactions</strong> → CP. Any component doing <strong>counting, caching, or buffering</strong> → AP.</div>
+  </div>
+
+  <!-- 7b. REDIS OPERATIONS -->
+  <div class="section" id="redis-ops">
+    <div class="section-header">
+      <div class="section-num" style="background:#993C1D">R</div>
+      <h2>Redis Operations — Complete Map</h2>
+    </div>
+
+    <table class="req-table">
+      <thead><tr><th>#</th><th>Use Case</th><th>Command</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Count storage</td><td><code>INCR / DECR count:post_xyz</code></td><td>Increment or decrement like count on every event</td></tr>
+        <tr><td>2</td><td>Batch reads</td><td><code>MGET count:post_1 ... count:post_20</code></td><td>Fetch 20 counts in one single round trip</td></tr>
+        <tr><td>3</td><td>User like status</td><td><code>SET user_like:post_xyz:user_abc 1, TTL 1hr</code> / <code>EXISTS</code></td><td>Deduplication fast path — check before hitting DynamoDB</td></tr>
+        <tr><td>4</td><td>Hot detection</td><td><code>INCR rate:post_xyz:{minute}</code> + <code>EXPIRE 120</code></td><td>Sliding window counter — detect viral content</td></tr>
+        <tr><td>5</td><td>Write buffering</td><td><code>GETSET buffer:post_xyz 0</code></td><td>Atomic read-and-reset — batch flush to DynamoDB</td></tr>
+        <tr><td>6</td><td>Thundering herd</td><td><code>SETNX lock:post_xyz</code></td><td>Distributed lock — only one request queries DB on cache miss</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Sharded counters specifically</h3>
+    <pre>INCR count:post_xyz:42         <- write to one shard (hash(user_id) % 100)
+MGET count:post_xyz:0..99      <- read all 100 shards in one round trip
+SET  count:post_xyz:total      <- cache the aggregated sum with TTL</pre>
+
+    <h3>HyperLogLog — why we rejected it</h3>
+    <pre>PFADD  likes:post_xyz user_abc    <- add user to set
+PFCOUNT likes:post_xyz            <- estimated unique count (~0.81% error)
+PFDEL  likes:post_xyz user_abc    <- DOES NOT EXIST</pre>
+
+    <div class="callout callout-amber">
+      <strong>Fatal flaw:</strong> HyperLogLog has NO remove operation. Unlike is impossible to track. Once a user is added, they cannot be removed.
+    </div>
+
+    <table class="req-table">
+      <thead><tr><th>HyperLogLog limitation</th><th>Impact on our system</th></tr></thead>
+      <tbody>
+        <tr><td>No delete / remove operation</td><td>Unlike operation becomes impossible to track</td></tr>
+        <tr><td>~0.81% error rate</td><td>Count off by thousands at millions scale</td></tr>
+        <tr><td>No membership check</td><td>Cannot answer "has user X liked post Y?"</td></tr>
+        <tr><td>Approximate only</td><td>Cannot use for deduplication</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Where HyperLogLog IS useful</h3>
+    <div class="card-grid">
+      <div class="callout callout-green" style="margin:0">
+        <strong>Good for:</strong> Unique users who viewed a post · Distinct IPs hitting an API · Unique visitor dashboards — anywhere removal is never needed and approximate is fine.
+      </div>
+      <div class="callout callout-amber" style="margin:0">
+        <strong>Not for:</strong> Like counts (unlikes needed) · Deduplication (needs exact membership) · Any counter requiring removal operations.
+      </div>
+    </div>
+
+    <h3>Redis failure recovery chain</h3>
+    <pre>Normal operation:
+  All reads  -> Redis (primary)
+  All counts -> INCR/DECR Redis via Aggregation Service
+  Every 60s  -> sync Redis count + Kafka offset -> DynamoDB Counts
+
+Redis goes down:
+  Reads fall back to DynamoDB Counts immediately
+  Likes still flow -> DynamoDB Likes + Kafka (no data loss)
+  Offsets NOT committed during outage (Redis write failed)
+
+Redis comes back:
+  Step 1: Load DynamoDB Counts into Redis  (bulk recovery)
+  Step 2: Replay Kafka from saved offset   (fills the gap)
+  Step 3: Redis fully accurate
+
+Why save Kafka offset alongside count sync?
+  Offsets for PROCESSED events are already committed
+  DynamoDB Counts may be 60s stale
+  Saving offset at sync time -> replay exactly the missing window</pre>
+
+    <div class="callout callout-blue">
+      <strong>Production defense layers:</strong> Redis AOF persistence handles most restarts — Redis recovers itself on restart. Offset + count sync to DynamoDB handles catastrophic data loss. Likes table COUNT(*) is the last resort source of truth.
+    </div>
+  </div>
+
+  <!-- 8. CONCEPT CARDS -->
+  <div class="section" id="concepts">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>Concept Cards</h2>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">Sharded Counters</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> Split one counter into N counters to distribute write load across multiple keys.</p>
+        <p><strong>When:</strong> Single counter receiving too many concurrent writes — hot spot problem.</p>
+        <p><strong>How:</strong> <code>shard_id = hash(user_id) % N</code> · write to <code>counter:id:{shard_id}</code> · read = sum of all shards.</p>
+        <p><strong>Why deterministic hash (not random):</strong> Same user always maps to same shard — like and unlike always cancel correctly.</p>
+        <p><strong>Tradeoff:</strong> Reads cost N Redis calls — mitigated by caching the aggregated sum.</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">Sliding Window Counter</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> Track event rate over a rolling time window (not a fixed reset window).</p>
+        <p><strong>When:</strong> Hot content detection, rate limiting, fraud detection.</p>
+        <p><strong>How:</strong> <code>INCR rate:post_xyz:{current_minute}</code> · <code>EXPIRE 120</code> · check if above threshold.</p>
+        <p><strong>Why not fixed window:</strong> Fixed window misses spikes at minute boundaries. Sliding window catches all spikes continuously.</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">Consistent Hashing</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> Hashing technique where adding/removing nodes only remaps ~1/N keys instead of all keys.</p>
+        <p><strong>When:</strong> Dynamically scaling sharded systems (cache clusters, DB shards).</p>
+        <p><strong>How:</strong> Nodes placed on a ring (0–360°). Each key maps to nearest node clockwise.</p>
+        <p><strong>Impact:</strong> Adding 1 shard remaps ~1% of keys. Without it: ~100% remapped.</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">Thundering Herd</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> Cache failure causes all concurrent requests to simultaneously hammer the database.</p>
+        <p><strong>When:</strong> Redis goes down → 100M users query DynamoDB simultaneously → DB crashes.</p>
+        <p><strong>Fix:</strong> Request coalescing — first request acquires <code>SETNX</code> lock, queries DB, populates cache. Others wait and read from cache.</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">Global Secondary Index (GSI)</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> Auto-maintained copy of data with a different partition key for an alternate query pattern.</p>
+        <p><strong>When:</strong> Two equally important queries need different partition keys.</p>
+        <p><strong>Example:</strong> Main table: <code>content_id (PK)</code> for "count likes for post". GSI: <code>user_id (PK)</code> for "all posts liked by user".</p>
+        <p><strong>Cost:</strong> Extra storage + slightly slower writes.</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">Optimistic UI</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> Client updates UI immediately before server confirms, then reconciles on response.</p>
+        <p><strong>When:</strong> Write latency would make UX feel sluggish — like button, follow, bookmark.</p>
+        <p><strong>How:</strong> Fill heart + increment count locally → POST to server async → adjust UI if server returns different value.</p>
+        <p><strong>Tradeoff:</strong> Rare brief inconsistency if server rejects — handled gracefully by reverting UI.</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">Write-Through Cache</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> On every write, update both DB and cache synchronously in same request flow.</p>
+        <p><strong>When:</strong> Strong consistency required for "read your own writes" — user's own like status.</p>
+        <p><strong>How:</strong> <code>INSERT DynamoDB</code> + <code>SET Redis key, TTL 1hr</code> — both in same like handler.</p>
+        <p><strong>Tradeoff:</strong> Slightly slower writes (2 operations) vs read-your-own-writes guarantee.</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-title">LSM Tree (Why DynamoDB handles high writes)</div>
+      <div class="concept-body">
+        <p><strong>What:</strong> Log Structured Merge Tree — writes go to memory first, flushed sequentially to disk.</p>
+        <p><strong>Why fast:</strong> Sequential writes are 10× faster than random writes. No row locking.</p>
+        <p><strong>Flow:</strong> Write → MemTable (RAM) → periodic flush → SSTable (disk, sequential).</p>
+        <p><strong>Result:</strong> Handles 30K+ write QPS comfortably at a single node level.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. TRADEOFFS -->
+  <div class="section" id="tradeoffs">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2>Trade-off Summary</h2>
+    </div>
+    <table class="trade-table">
+      <thead><tr><th>Decision</th><th>Chosen</th><th>Rejected</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td>DB for likes</td><td>DynamoDB</td><td>PostgreSQL</td><td>High write throughput, horizontal scaling, no row locking</td></tr>
+        <tr><td>Message queue</td><td>Kafka</td><td>RabbitMQ</td><td>Message replay on consumer failure, handles 30K QPS</td></tr>
+        <tr><td>Cache</td><td>Redis</td><td>Memcached</td><td>Atomic INCR, MGET, persistence, rich data structures</td></tr>
+        <tr><td>Counting approach</td><td>Async aggregation</td><td>COUNT(*) / pre-aggregated</td><td>Zero write contention, handles any viral burst</td></tr>
+        <tr><td>Hot spot</td><td>Sharded counters</td><td>Single counter</td><td>Distributes 10K writes/sec across 100 shards</td></tr>
+        <tr><td>Deduplication</td><td>DB PK + Redis cache</td><td>Redis only</td><td>Race conditions need DB as fallback safety net</td></tr>
+        <tr><td>Monotonic reads</td><td>Best effort</td><td>Sticky sessions</td><td>Operational complexity not worth it for count staleness</td></tr>
+        <tr><td>Count accuracy</td><td>Approximate</td><td>Exact</td><td>"1.2K" display hides staleness — users don't notice</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 10. PITCH -->
+  <div class="section" id="pitch">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <h2>Interview Pitch</h2>
+    </div>
+    <p style="margin-bottom:16px;color:#6b7280;font-size:14px">Read this out loud until it flows naturally. ~60 seconds.</p>
+    <div class="pitch-box">
+      "The likes counting system has two core challenges — <strong>high write throughput</strong> and the <strong>hot spot problem</strong> from viral content.<br><br>
+      For writes, I store like records in DynamoDB with a composite primary key <strong>(content_id, user_id)</strong> for deduplication, then publish events to Kafka for async count aggregation into Redis. This decouples write throughput from count updates — Kafka buffers any burst.<br><br>
+      For reads, 300K peak QPS is served through a <strong>three-layer cache</strong> — local in-memory at 5s TTL, Redis at 10min TTL, DynamoDB counts as fallback. Most requests never reach the DB.<br><br>
+      For hot spots, I use <strong>adaptive sharded counters</strong> — when a post's like rate exceeds 100/min, I split its Redis counter into 100 shards using hash(user_id) % 100. Each shard receives ~100 writes/sec instead of 10,000. The sum of all shards is cached so reads remain O(1).<br><br>
+      Consistency is applied selectively — like counts are eventual (acceptable 2-3s lag), but a user's own like status uses <strong>write-through cache</strong> for immediate accuracy. Deduplication is strongly consistent via the DynamoDB primary key."
+    </div>
+  </div>
+
+  <!-- 11. PATTERNS -->
+  <div class="section" id="patterns">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <h2>Pattern Transfers</h2>
+    </div>
+    <table class="pattern-table">
+      <thead><tr><th>Pattern</th><th>This system</th><th>Also appears in</th></tr></thead>
+      <tbody>
+        <tr><td>Async aggregation via Kafka</td><td>Like counts</td><td>URL Shortener (click counts), Leaderboards, Notification counts</td></tr>
+        <tr><td>Sharded counters</td><td>Hot post like counts</td><td>View counts, inventory levels, any high-write counter</td></tr>
+        <tr><td>Defense in depth deduplication</td><td>Like deduplication</td><td>Payment idempotency, Coupon redemption, URL creation</td></tr>
+        <tr><td>Adaptive hot spot handling</td><td>Single → sharded on rate</td><td>Rate Limiter, Auto-scaling, Cache tier promotion</td></tr>
+        <tr><td>GSI for alternate queries</td><td>User's liked posts</td><td>Any system with 2 query patterns needing different partition keys</td></tr>
+        <tr><td>Sliding window counter</td><td>Hot content detection</td><td>Rate Limiter, API throttling, Fraud detection</td></tr>
+        <tr><td>Consistent hashing</td><td>Shard add/remove</td><td>Cache clusters, Load balancers, Distributed DBs</td></tr>
+        <tr><td>Three-layer cache hierarchy</td><td>Read path</td><td>Feed systems, URL Shortener, Product catalog</td></tr>
+        <tr><td>Write-through cache</td><td>User's own like status</td><td>Comments, Follows, Reactions — any own-action consistency</td></tr>
+        <tr><td>Optimistic UI</td><td>Like button feel</td><td>Any social action — comment, follow, bookmark</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 12. WEAK AREAS -->
+  <div class="section" id="weak">
+    <div class="section-header">
+      <div class="section-num">12</div>
+      <h2>Weak Areas to Revisit</h2>
+    </div>
+    <div class="card">
+      <ul class="checklist">
+        <li><span class="check-box"></span>Consistent hashing internals — virtual nodes and ring assignment</li>
+        <li><span class="check-box"></span>Redis persistence modes — AOF vs RDB, when to use which</li>
+        <li><span class="check-box"></span>Kafka partition strategy — why partition by content_id for ordering guarantee</li>
+        <li><span class="check-box"></span>DynamoDB on-demand vs provisioned capacity — cost tradeoffs at scale</li>
+        <li><span class="check-box"></span>Thundering herd mitigation — SETNX distributed lock implementation</li>
+        <li><span class="check-box"></span>Write buffering with GETSET — atomic read-and-reset pattern</li>
+        <li><span class="check-box"></span>Aggregation Service failure recovery — Kafka consumer lag handling</li>
+        <li><span class="check-box"></span>Feed Service normalization — how content from multiple microservices is unified</li>
+      </ul>
+    </div>
+    <div class="callout callout-blue" style="margin-top:16px">
+      <strong>How to use this guide:</strong> Read fully today. Before your next HLD session, re-read sections 10 and 11 only. After every new problem, update the Pattern Transfers table.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
